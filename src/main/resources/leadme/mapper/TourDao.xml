@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="leadme.dao.TourDao">
+    
+    <resultMap type="tour" id="tourMap">
+        <id column="tno"  property="tno"/>
+        <result column="titl"    property="titl"/>
+        <result column="star"    property="star"/>
+        <result column="loc"    property="loc"/>
+        <result column="amt"    property="amt"/>
+        <result column="hits"    property="hits"/>
+        <result column="pri_phot"    property="pri_phot"/>
+        <result column="cmt_cnt"    property="cmt_cnt"/>
+        <result column="tour_intro" property="tour_intro"/>
+        <association property="member" javaType="member">
+            <id column="mno" property="no"/>
+            <result column="name"    property="name"/>
+        </association>
+        <association property="category" javaType="category">
+            <id column="cat_no" property="cat_no"/>
+            <result column="cat_name"    property="cat_name"/>
+            <result column="cat_name_eng"    property="cat_name_eng"/>
+        </association>
+        <association property="mid_category" javaType="category">
+            <id column="cat_no" property="cat_no"/>
+            <result column="mid_cat"    property="cat_name"/>
+            <result column="mid_cat_eng"    property="cat_name_eng"/>
+        </association>
+    </resultMap>
+    
+    
+    <resultMap type="category" id="categoryMap">
+        <id column="cat_no"  property="cat_no"/>
+        <result column="cat_name"    property="cat_name"/>
+        <result column="up_cat_no"    property="up_cat_no"/>
+        <result column="cat_name_eng"    property="cat_name_eng"/>
+    </resultMap>
+    
+    
+    <resultMap type="tour" id="puretour">
+        <id column="tno"  property="tno"/>
+        <result column="titl"    property="titl"/>
+        <result column="star"    property="star"/>
+        <result column="loc"    property="loc"/>
+        <result column="amt"    property="amt"/>
+        <result column="hits"    property="hits"/>
+        <result column="pri_phot"    property="pri_phot"/>
+        <result column="cmt_cnt"    property="cmt_cnt"/>
+        <result column="tour_intro" property="tour_intro"/>
+    </resultMap>
+    
+    <resultMap type="comment" id="comment">
+        <id column="cmt_no"  property="cmt_no"/>
+        <result column="mno"    property="mno"/>
+        <result column="cont"    property="cont"/>
+        <result column="cont_star"    property="cont_star"/>
+        <result column="cont_phot"    property="cont_phot"/>
+        <result column="cont_dt"    property="cont_dt"/>
+        <result column="del_yn"    property="del_yn"/>
+        <result column="up_cmt_no"    property="up_cmt_no"/>
+        <result column="tno" property="tno"/>
+    </resultMap>
+    
+    <sql id="selectTour">
+    select 
+            t.tno
+            ,t.titl
+            ,t.pri_phot
+            ,t.star
+            ,t.loc
+            ,t.amt
+            ,t.hits
+            ,t.cmt_cnt
+            ,m.name
+            ,c.cat_name
+            ,c2.cat_name as mid_cat
+            ,t.tour_intro
+            ,c.cat_name_eng
+            ,c2.cat_name_eng as mid_cat_eng
+    from 
+            memb m  
+            join g_memb g 
+            join tour t 
+            join category c 
+            right outer join category c2
+    on 
+            m.mno = g.mno
+
+    </sql>
+    
+    <select id="tourList" resultMap="tourMap" parameterType="map">
+    
+        <include refid="selectTour"></include>
+        where 
+            t.mno = g.mno
+        and c.cat_no = c2.up_cat_no
+        and t.cat_no = c2.cat_no
+        <choose>
+            <when test="10 > catNo"></when>
+            <when test="catNo == null"></when>
+            <when test="(catNo%10) == 0 ">
+                and c2.up_cat_no = #{catNo};
+            </when>
+            <otherwise>
+               and c2.cat_no = #{catNo};
+            </otherwise>
+        </choose>
+    
+    </select>
+
+    <select id="categoryList" resultMap="categoryMap" parameterType="map">
+        select * from category where up_cat_no = #{catNo};
+    </select>
+    
+    <select id="locList" resultMap="tourMap" parameterType="map">
+        <include refid="selectTour"></include>
+            where 
+                t.mno = g.mno
+            and c.cat_no = c2.up_cat_no
+            and t.cat_no = c2.cat_no
+        <choose>
+            <when test="10 > catNo"></when>
+            <when test="(catNo%10) == 0 ">
+                and c2.up_cat_no = #{catNo}
+            </when>
+            <otherwise>
+                and c2.cat_no = #{catNo}
+            </otherwise>
+        </choose>
+        and
+        <foreach collection="locList" item="loc" 
+                 open="(" separator="or" close=")">
+           loc = #{loc}
+        </foreach>
+    </select>
+    
+    
+    <select id="tourSelect" resultMap="puretour" parameterType="map">
+    
+        select *
+        from tour
+        where tno =#{tno}
+    
+    </select>
+    
+    <insert id="enrollmentComment" parameterType="comment"
+            useGeneratedKeys="true" keyColumn="cmt_no" keyProperty="cmt_no">
+   
+    INSERT INTO comment(mno, cont, cont_star, cont_phot, cont_dt, del_yn, up_cmt_no, tno) 
+    VALUES (#{mno},#{cont},#{cont_star},#{cont_phot},#{cont_dt},#{del_yn},#{up_cmt_no},#{tno})
+   
+    </insert>
+    
+    <select id="commentCheck" resultMap="comment" parameterType="comment">
+        SELECT * 
+        FROM comment 
+        WHERE mno = #{mno}
+        and tno = #{tno}
+    </select>
+    
+</mapper>
+
+
+
+
+
+
+
+
+

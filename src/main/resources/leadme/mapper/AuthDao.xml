@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- MemberDao 클래스가 사용할 SQL이 들어 있는 파일 -->
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="leadme.dao.AuthDao">
+
+    <resultMap type="member" id="memberMap">
+        <id column="email"  property="email"/>
+        <result column="mno" property="no" />
+        <result column="name"    property="name"/>
+        <result column="photo"    property="photo"/>
+        <result column="path"    property="path"/>
+    </resultMap>
+    
+    <resultMap type="guide" id="guideMap">
+        <id column="mno"  property="mno"/>
+        <result column="tel" property="tel" />
+        <result column="intro"    property="intro"/>
+        <result column="birth"    property="birth"/>
+    </resultMap>
+    
+    
+    <select id="login" resultMap="memberMap" parameterType="map">
+        
+        select * 
+        from memb
+        where email = #{email}
+        and pwd = password(#{password});
+    
+    </select>
+    
+    <select id="socialLogin" resultMap="memberMap" parameterType="map">
+        
+        select * 
+        from memb
+        where email = #{email};
+    
+    </select>
+    
+    
+    
+    <insert id="createSocialUser" parameterType="member"
+            useGeneratedKeys="true" keyColumn="mno" keyProperty="no">
+   
+    insert into memb(name,pwd,cert_email,email,photo,mtype,path,active) values
+            (#{name}, password(#{password}), #{cert_email}, #{email}, #{photo}, #{mtype}, #{path}, #{active});
+   
+    </insert>
+    
+    <insert id="createUser" parameterType="member"
+            useGeneratedKeys="true" keyColumn="mno" keyProperty="no">
+   
+    insert into memb(name,pwd,cert_email,email,photo,mtype,path,active) values
+            (#{name}, password(#{password}), #{cert_email}, #{email}, #{photo}, #{mtype}, #{path}, #{active});
+            
+    <selectKey resultType="Integer" keyProperty="no" order="AFTER">
+        SELECT LAST_INSERT_ID()
+    </selectKey>
+    </insert>
+    
+    <insert id="createTmemb" parameterType="member">
+   
+    INSERT INTO t_memb(mno, lang) VALUES (#{no},#{lang})
+    
+    </insert>
+    
+    
+    <select id="findUser" resultMap="memberMap" parameterType="map">
+    
+        SELECT * FROM memb where email=#{member.email};
+        
+    </select>
+    
+    <update id="updatePw" parameterType="map">
+        update memb set pwd = PASSWORD(#{password}) where email = #{email};
+    </update>
+    
+    <insert id="createGuideUser" parameterType="guide">
+   
+    INSERT INTO g_memb(mno, tel, intro, cash, bnk_cd, a_acc, owner, birth) 
+        VALUES (#{mno},#{tel},#{intro},#{cash},#{bnk_cd},#{a_acc},#{owner},#{birth});
+   
+    </insert>
+    
+    <update id="certificateEmail" parameterType="map">
+        
+        UPDATE memb
+        SET cert_email= 'Y'
+        WHERE mno = #{mno}
+        
+    </update>
+    
+    <update id="goodbye" parameterType="map">
+    
+    UPDATE memb
+    SET active = 'Y' 
+    , cert_email = 'N'
+    , email = #{email}
+    , pwd = password(#{byePwd})
+    WHERE mno = #{mno}
+    and pwd =  password(#{pwd})
+    
+    </update>
+    
+    <select id="findGuide" resultMap="guideMap" parameterType="member">
+        
+        select * 
+        from g_memb
+        where mno = #{no};
+    
+    </select>
+    
+    
+    
+    
+</mapper>
+
+
+
+
+
+
+
+
+
